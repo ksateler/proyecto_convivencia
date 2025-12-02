@@ -1,0 +1,235 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+
+<style>
+:root {
+  --bg-dark: #424242;
+  --accent-blue: #2196F3;
+  --accent-green-soft: #e6f4ea;
+  --accent-green-border: #c5e1a5;
+}
+
+/* CONTENEDOR GENERAL */
+.detalle-page {
+  max-width: 960px;
+  margin: 0 auto 40px;
+  padding: 10px 15px 30px;
+}
+
+/* CABECERA: TÍTULO + BOTÓN VOLVER */
+.detalle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 10px;
+}
+
+.detalle-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.detalle-btn {
+  display: inline-block;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid #b0bec5;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.detalle-btn--secondary {
+  background: #4CAF50;
+  color: #ffffff;
+  border-color: #388E3C;
+}
+
+.detalle-btn--secondary:hover {
+  background: #388E3C;
+}
+
+/* RESUMEN DE LA ALERTA */
+.alert-summary {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--accent-green-border);
+  background: #ffffff;
+  margin-bottom: 25px;
+  color: #000000; /* todo el texto del cuadro en negro */
+}
+
+.alert-summary__header {
+  background: var(--accent-green-soft);
+  text-align: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+
+.alert-summary__body {
+  padding: 14px 18px 16px;
+}
+
+.alert-summary__body p {
+  margin: 0.15rem 0;
+  font-size: 0.95rem;
+}
+
+.summary-label {
+  font-weight: 800;
+}
+
+.summary-value {
+  font-weight: 400;
+}
+
+/* DETALLE DE LA RESOLUCIÓN */
+.detalle-card {
+  border-radius: 10px;
+  border: 1px solid #cfd8dc;
+  background: #f8f8ff;
+  padding: 14px 18px 16px;
+  margin-bottom: 25px;
+  color: #000000; /* todo el texto de este cuadro en negro */
+}
+
+.detalle-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.detalle-card h4 {
+  margin-bottom: 0.4rem;
+}
+
+.detalle-card p {
+  margin: 0.2rem 0;
+}
+
+/* BLOQUE APODERADO (MÁS OSCURO, TEXTO BLANCO) */
+.apoderado-box {
+  margin-top: 6px;
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #333333;   /* gris oscuro similar al fondo */
+  color: #ffffff;        /* texto blanco */
+  font-size: 0.9rem;
+}
+
+.apoderado-box p {
+  margin: 0.25rem 0;
+}
+
+/* DESCRIPCIÓN */
+.desc-box {
+  margin-top: 6px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #cfd8dc;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  color: #000000;
+}
+
+/* BOTÓN VOLVER ABAJO */
+.detalle-actions {
+  margin-top: 10px;
+  text-align: left;
+}
+
+/* Responsivo */
+@media (max-width: 640px) {
+  .detalle-header {
+    flex-direction: column;
+  }
+  .detalle-title {
+    order: -1;
+  }
+}
+</style>
+
+<div class="detalle-page">
+
+  <!-- CABECERA -->
+  <div class="detalle-header">
+    <div style="width:120px"></div> {# espacio para compensar el botón en desktop #}
+    <h2 class="detalle-title">Detalle de Bitácora (Alerta Resuelta)</h2>
+    <a href="{% url 'panel_gestion' %}" class="detalle-btn detalle-btn--secondary">
+      Volver al panel
+    </a>
+  </div>
+
+  <!-- RESUMEN DE LA ALERTA -->
+  <section class="alert-summary">
+    <div class="alert-summary__header">
+      RESUMEN DE LA ALERTA
+    </div>
+    <div class="alert-summary__body">
+      <p><span class="summary-label">TIPO DE ALERTA:</span>
+         <span class="summary-value">{{ bitacora.alerta_asociada.get_tipo_display }}</span></p>
+      <p><span class="summary-label">CURSO:</span>
+         <span class="summary-value">{{ bitacora.alerta_asociada.curso.nombre }}</span></p>
+      <p><span class="summary-label">PROFESOR QUE REPORTÓ:</span>
+         <span class="summary-value">{{ bitacora.alerta_asociada.creada_por.username|default:"Sistema" }}</span></p>
+      <p><span class="summary-label">HORA:</span>
+         <span class="summary-value">{{ bitacora.alerta_asociada.tiempo_creacion }}</span></p>
+    </div>
+  </section>
+
+  <!-- DETALLE DE LA RESOLUCIÓN -->
+  <section class="detalle-card">
+    <h3>Detalle de la resolución</h3>
+
+    <p><strong>Encargado que atendió:</strong> {{ bitacora.alerta_asociada.atendida_por.username }}</p>
+    <p><strong>Hora de registro:</strong> {{ bitacora.hora_registro }}</p>
+
+    <hr>
+
+    {% if bitacora.estudiante %}
+      <p><strong>Estudiante involucrado:</strong> {{ bitacora.estudiante.nombre_completo }}</p>
+
+      {% if bitacora.subtipo_descompensacion %}
+        <p><strong>Descompensación de:</strong> {{ bitacora.get_subtipo_descompensacion_display }}</p>
+      {% endif %}
+
+      <h4>Información del apoderado</h4>
+      <div class="apoderado-box">
+        <p><strong>Nombre:</strong> {{ bitacora.estudiante.nombre_apoderado|default:"No informado" }}</p>
+        <p><strong>Teléfono:</strong> {{ bitacora.estudiante.telefono_apoderado|default:"No informado" }}</p>
+        <p><strong>Email:</strong> {{ bitacora.estudiante.email_apoderado|default:"No informado" }}</p>
+      </div>
+
+    {% else %}
+      <p><strong>Estudiante involucrado:</strong> N/A (Alerta de Apoyo Técnico)</p>
+    {% endif %}
+
+    <hr>
+
+    <h4>Descripción</h4>
+    <div class="desc-box">
+      <p>{{ bitacora.descripcion_suceso|linebreaks }}</p>
+    </div>
+  </section>
+
+  <!-- BOTÓN VOLVER ABAJO -->
+  <div class="detalle-actions">
+    <a href="{% url 'panel_gestion' %}" class="detalle-btn detalle-btn--secondary">
+      Volver al panel
+    </a>
+  </div>
+
+</div>
+
+{% endblock %}

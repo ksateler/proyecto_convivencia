@@ -1,0 +1,472 @@
+{% extends 'core/base.html' %}
+{% load static %} 
+
+{% block content %}
+
+    <h2>{{ titulo }}</h2>
+    <p>Revisa y gestiona las alertas asignadas a {{ titulo }}.</p>
+
+    {# Botón Excel solo director #}
+{% if request.user.perfil.rol == 'director' %}
+    <div style="background-color: #262726ff;
+                border: 3px solid green;
+                padding: 10px;
+                margin-bottom: 15px;
+                border-radius: 12px;">
+        <h3>Descargar Reporte Alertas</h3><br>
+        <a href="{% url 'exportar_bitacoras' %}" 
+           style="font-weight: bold; color: green; text-decoration: none;">
+            Descargar
+        </a>
+    </div>
+{% endif %}
+
+    {# SOS solo director/inspectoria #}
+{% if request.user.perfil.rol == 'inspectoria' or request.user.perfil.rol == 'director' %}
+    <section class="sos-card">
+        <div class="sos-card__header">
+            <span class="sos-pill">SOS CRÍTICA</span>
+            <h3 class="sos-title">Generar alerta de emergencia</h3>
+        </div>
+        <div class="sos-card__body">
+            <p>
+                Esto genera una alerta de <strong>emergencia inmediata</strong> para Inspectoría.
+                Úselo solo en situaciones críticas.
+            </p>
+
+            <form method="POST" action="{% url 'crear_alerta' %}">
+                {% csrf_token %}
+                <input type="hidden" name="tipo" value="sos">
+
+                <div class="sos-select-row">
+                    <div class="sos-select-label">
+                        <label for="curso_sos">Curso de la emergencia</label>
+                    </div>
+                    <div class="sos-select-wrapper">
+                        <select name="curso_id" id="curso_sos" required>
+                            <option value="">-- ¿Dónde ocurre? --</option>
+                            {% for curso in cursos_para_sos %}
+                                <option value="{{ curso.id }}">{{ curso.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sos-actions">
+                    <button type="submit" class="sos-btn">
+                        ¡GENERAR SOS!
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endif %}
+
+    {# Notificador de alertas (JS) #}
+    <div id="notificador-alertas" 
+         data-api-url="{% url 'check_alertas_gestion' %}"
+         style="margin-bottom: 10px;">
+    </div>
+
+    <hr>
+
+    {# ==== ESTILOS KANBAN (3 columnas con efecto hover) ==== #}
+    <style>
+.flexing {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 60vh;
+}
+
+{#===== BLOQUES DE CADA COLUMNA ==== #}
+
+@media screen and (min-width: 1000px) {
+  .flexing {
+    flex-direction: row;
+  }
+}
+
+{# Contenedor de cada columna #}
+
+.section {
+  flex: 1;
+  position: relative;
+  transition: 0.7s ease;
+  padding: 1.5rem 1rem 1rem;
+  border-radius: 8px;
+  overflow-y: auto;
+}
+
+{# === Contenido de cada columna ==== #}
+
+/* Colores de fondo de cada columna */
+.section--yellow {
+  background-color: #ffff00;
+}
+
+.section--pink {
+  background-color: #fa0109;
+}
+
+.section--green {
+  background-color: #9ce535;
+}
+
+{# === Efectos hover/active/focus ==== #}
+
+/* Efecto de expansión SOLO en el contenedor, no en el título */
+.section:hover,
+.section:active,
+.section:focus {
+  flex: 3;
+}
+
+/* Título de la columna: siempre horizontal, fijo arriba */
+.title {
+  font-family: "Fredoka One", system-ui, sans-serif;
+  font-size: 1.3rem;
+  line-height: 1.2;
+  margin: 0 0 0.75rem 0;
+  color: #111;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.title-count {
+  font-size: 0.8em;
+  margin-left: 0.25em;
+  opacity: 0.9;
+}
+
+/* Contenido interno de la columna */
+.section-content {
+  margin-top: 0.25rem;
+}
+
+.section hr {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
+  margin: 0 0 0.75rem;
+}
+
+.alerta-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #222;
+  font-size: 0.9rem;
+}
+
+.alerta-card strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.alerta-card a {
+  font-weight: bold;
+  text-decoration: none;
+  color: #00796b;
+}
+
+.alerta-card a:hover {
+  text-decoration: underline;
+}
+
+.section-empty {
+  font-style: italic;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+/* ===== BLOQUE SOS CRÍTICO ===== */
+
+.sos-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #c62828;
+  background: #fff5f5;
+  margin: 18px 0 22px;
+  box-shadow: 0 2px 8px rgba(198, 40, 40, 0.15);
+}
+
+.sos-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(90deg, #b71c1c, #d32f2f);
+  color: #ffffff;
+  padding: 10px 14px;
+}
+
+.sos-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sos-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.sos-card__body {
+  padding: 12px 16px 14px;
+  color: #000000;
+  font-size: 0.95rem;
+}
+
+.sos-card__body p {
+  margin: 0 0 10px 0;
+}
+
+/* Fila label + select */
+.sos-select-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: 12px;
+}
+
+
+.sos-select-label {
+  background: #ffebee;
+  border: 1px solid #ef9a9a;
+  border-right: none;
+  padding: 6px 14px;
+  border-radius: 20px 0 0 20px;
+  font-size: 0.7rem; 
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  color: #b71c1c;
+}
+
+.sos-select-label label {
+  margin: 0;
+  cursor: pointer;
+}
+
+.sos-select-wrapper {
+  flex: 1;
+  min-width: 180px;
+}
+
+.sos-select-wrapper select {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 0 20px 20px 0;
+  border: 1px solid #ef9a9a;
+  border-left: none;
+  font-size: 0.9rem;
+  background: #ffffff;
+  color: #000000;
+}
+
+/* Botón SOS */
+.sos-actions {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.sos-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid #b71c1c;
+  background: #d32f2f;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sos-btn:hover {
+  background: #b71c1c;
+}
+
+/* Responsivo */
+@media (max-width: 640px) {
+  .sos-select-label {
+    border-radius: 20px 20px 0 0;
+    border-right: 1px solid #ef9a9a;
+  }
+
+  .sos-select-wrapper select {
+    border-radius: 0 0 20px 20px;
+    border-top: none;
+  }
+}
+
+
+</style>
+
+
+    {# ==== TABLERO KANBAN CON NUEVO ESTILO ==== #}
+    <div class="flexing">
+
+        {# PENDIENTES #}
+        <section class="section section--yellow">
+            <h3 class="title">
+                Pendientes
+                <span class="title-count">({{ pendientes.count }})</span>
+            </h3>
+
+            <div class="section-content" id="lista-pendientes">
+                <hr>
+                {% for alerta in pendientes %}
+                    <div class="alerta-card">
+                        {% if alerta.tipo == 'asistencia' %}
+                            <strong style="color: #c00;">Tipo: {{ alerta.get_tipo_display }}</strong>
+                            {% if alerta.estudiante_implicado %}
+                                <p>
+                                    {{ alerta.estudiante_implicado.nombre_completo }} tiene baja asistencia.
+                                </p>
+                            {% endif %}
+                            <p>Reportado por: {{ alerta.creada_por.username|default:"Sistema" }}</p>
+                        {% else %}
+                            <strong style="color: #c00;">Tipo: {{ alerta.get_tipo_display }}</strong>
+
+                            {% if alerta.curso %}
+                                <p>Curso: {{ alerta.curso.nombre }}</p>
+                            {% endif %}
+                            
+                            {% if alerta.estudiante_implicado %}
+                                <p style="font-weight: bold; background-color: #ffffdd;">
+                                    Estudiante: {{ alerta.estudiante_implicado.nombre_completo }}
+                                </p>
+                            {% endif %}
+
+                            <p>Reportado por: {{ alerta.creada_por.username|default:"Sistema" }}</p>
+                            <p>Hora: {{ alerta.tiempo_creacion|time:"H:i" }}</p>
+                            
+                            {% if alerta.descripcion_profesor %}
+                                <div style="background-color: #ffffdd; border: 1px solid #e6db55; padding: 5px; margin-top: 5px;">
+                                    <strong>Descripción:</strong> {{ alerta.descripcion_profesor|linebreaksbr }}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+
+                        <a href="{% url 'acudir_alerta' alerta.id %}">Atender</a>
+                    </div>
+                {% empty %}
+                    <p class="section-empty">No hay alertas pendientes.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# EN CURSO #}
+        <section class="section section--pink">
+            <h3 class="title">
+                En Curso
+                <span class="title-count">({{ en_curso.count }})</span>
+            </h3>
+
+            <div class="section-content">
+                <hr>
+                {% for alerta in en_curso %}
+                    <div class="alerta-card">
+
+                        {% if alerta.tipo == 'asistencia' %}
+                            <strong>Tipo: {{ alerta.get_tipo_display }}</strong>
+                            <p>Siendo atendido por {{ alerta.atendida_por.username }}</p>
+
+                            {% if alerta.estudiante_implicado %}
+                                <p style="font-weight: bold;">{{ alerta.estudiante_implicado.nombre_completo }}</p>
+                                <div style="font-size: 0.9em; background-color: #eee; padding: 5px;">
+                                    <strong>Datos Apoderado:</strong><br>
+                                    Nombre: {{ alerta.estudiante_implicado.nombre_apoderado|default:"N/A" }}<br>
+                                    Fono: {{ alerta.estudiante_implicado.telefono_apoderado|default:"N/A" }}<br>
+                                    Email: {{ alerta.estudiante_implicado.email_apoderado|default:"N/A" }}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <strong>Tipo: {{ alerta.get_tipo_display }}</strong>
+                            <p style="color: blue; font-weight: bold;">
+                                Atendida por {{ alerta.atendida_por.username }}
+                            </p>
+
+                            {% if alerta.curso %}
+                                <p>Curso: {{ alerta.curso.nombre }}</p>
+                            {% endif %}
+                            
+                            {% if alerta.estudiante_implicado %}
+                                <p style="font-weight: bold; background-color: #ffffdd;">
+                                    Estudiante: {{ alerta.estudiante_implicado.nombre_completo }}
+                                </p>
+                            {% endif %}
+                            
+                            {% if alerta.descripcion_profesor %}
+                                <div style="background-color: #ffffdd; border: 1px solid #e6db55; padding: 5px; margin-top: 5px;">
+                                    <strong>Descripción:</strong> {{ alerta.descripcion_profesor|linebreaksbr }}
+                                </div>
+                            {% endif %}
+
+                            <p>Aceptada: {{ alerta.tiempo_aceptacion|time:"H:i" }}</p>
+                        {% endif %}
+
+                        <a href="{{ alerta.get_absolute_url }}">Resolver</a>
+                    </div>
+                {% empty %}
+                    <p class="section-empty">No hay alertas en curso.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# RESUELTAS #}
+        <section class="section section--green">
+            <h3 class="title">
+                Resueltas
+                <span class="title-count">({{ resueltas.count }})</span>
+            </h3>
+
+            <div class="section-content">
+                <hr>
+                {% for alerta in resueltas %}
+                    <div class="alerta-card" style="opacity: 0.85;">
+                        <strong>Tipo: {{ alerta.get_tipo_display }}</strong>
+                        <p>Atendida por: {{ alerta.atendida_por.username }}</p>
+                        
+                        {% if alerta.bitacoraincidente and alerta.bitacoraincidente.estudiante %}
+                            <p style="font-weight: bold;">
+                                Estudiante: {{ alerta.bitacoraincidente.estudiante.nombre_completo }}
+                            </p>
+                        {% elif alerta.curso %}
+                            <p>Curso: {{ alerta.curso.nombre }}</p>
+                        {% endif %}
+
+                        <a href="{{ alerta.get_absolute_url }}">
+                            Ver Bitácora
+                        </a>
+                    </div>
+                {% empty %}
+                    <p class="section-empty">No hay alertas resueltas hoy.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+    </div> 
+    {# FIN TABLERO KANBAN #}
+
+
+{# Incluir JS para notificaciones y refresco kanban #}
+    <script src="{% static 'core/js/panel_gestion.js' %}" defer></script>
+
+{% endblock %}

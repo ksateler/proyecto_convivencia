@@ -1,0 +1,818 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+:root {
+  --accent-blue: #2196F3;
+  --accent-green: #4CAF50;
+  --card-border: #b0bec5;
+  --card-bg: #f5f5f5;
+}
+
+/* CONTENEDOR GENERAL */
+.asistencia-page {
+  max-width: 1100px;
+  margin: 0 auto 40px;
+  padding: 10px 15px 30px;
+}
+
+/* TOP: TÍTULO + VOLVER */
+.asistencia-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+  margin-bottom: 14px;
+}
+
+.asistencia-title-card {
+  flex: 1;
+  margin: 0 auto;
+  max-width: 600px;
+  padding: 10px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: #eeeeee;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  color: #000000;
+}
+
+.asistencia-title-card h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.asistencia-back-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #b0bec5;
+  background: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: #000000;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 0 #b0bec5;
+  transition: all 0.15s ease;
+}
+
+.asistencia-back-btn:hover {
+  background: #e3f2fd;
+  box-shadow: 0 4px 0 #90a4ae;
+}
+
+/* NOTIFICADOR PROFESOR */
+.prof-notifier {
+  background: #f8f8ff;
+  border-radius: 8px;
+  border: 1px dashed #90caf9;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  min-height: 24px;
+  font-size: 0.9rem;
+  color: #000000;
+}
+
+/* BANNER MODO */
+.attendance-mode-banner {
+  margin: 0 auto 15px;
+  max-width: 900px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 1rem;
+  text-align: center;
+  border: 1px solid #fbc02d;
+  background: #fff9c4;
+  color: #000000;
+}
+
+.attendance-mode-banner--review {
+  border-color: #b0bec5;
+  background: #eceff1;
+}
+
+/* ACCORDION ASISTENCIA */
+.attendance-accordion {
+  margin-top: 8px;
+  margin-bottom: 20px;
+}
+
+.attendance-accordion-header {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: #eceff1;
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #000000;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.attendance-accordion-header:hover {
+  background: #e3f2fd;
+}
+
+.attendance-accordion-icon {
+  font-size: 1.1rem;
+}
+
+/* cuerpo del acordeón: colapsable */
+.attendance-accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+
+.attendance-accordion-body.is-open {
+  max-height: 900px; /* suficiente para 3 alumnos + controles */
+}
+
+.attendance-accordion-body-inner {
+  padding-top: 10px;
+}
+
+/* CARD PRINCIPAL DE ASISTENCIA */
+.asistencia-card {
+  border-radius: 14px;
+  border: 2px solid #000000;
+  background: var(--card-bg);
+  padding: 14px 16px 18px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  color: #000000;
+}
+
+/* SLIDER: contenedor general y cada “slide” de alumno */
+.attendance-slides {
+  margin-bottom: 8px;
+}
+
+.attendance-slide {
+  margin-bottom: 10px;
+}
+
+/* FILA DE ALUMNO */
+.attendance-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 4px;
+}
+
+/* NOMBRE DEL ESTUDIANTE */
+.student-name-card {
+  flex: 0 0 32%;
+  min-width: 240px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #000000;
+  background: #ffffff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  color: #000000;
+}
+
+/* GRUPO DE ESTADOS */
+.attendance-status-group {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* OPCIÓN (tipo jQuery UI checkboxradio) */
+.status-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #b0bec5;
+  background: #ffffff;
+  cursor: pointer;
+  min-width: 150px;
+  flex: 1 1 150px;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.8rem;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.12);
+  transition: all 0.15s ease;
+  color: #000000;
+}
+
+.status-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* círculo tipo radio */
+.status-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #90a4ae;
+  position: relative;
+}
+
+.status-circle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: all 0.15s ease;
+}
+
+.status-text {
+  letter-spacing: 0.06em;
+  color: #000000;
+}
+
+/* ESTADOS CHECKED */
+.status-option input[type="radio"]:checked + .status-circle::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.status-option input[type="radio"]:checked + .status-circle {
+  border-color: var(--accent-blue);
+}
+
+.status-option input[type="radio"]:checked ~ .status-text {
+  color: #000000;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* TAG DE ESTADO GUARDADO */
+.saved-state-tag {
+  font-weight: 700;
+  color: #607d8b;
+  font-size: 0.85rem;
+  margin: 2px 0 8px 4px;
+}
+
+/* CONTROLES DEL SLIDER (3 alumnos por “página”) */
+.attendance-slider-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.attendance-slider-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #000000;
+  background: #ffffff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 0 #b0bec5;
+  transition: all 0.15s ease;
+}
+
+.attendance-slider-btn:hover:not(:disabled) {
+  background: #e3f2fd;
+  box-shadow: 0 4px 0 #90a4ae;
+  transform: translateY(-1px);
+}
+
+.attendance-slider-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
+}
+
+.attendance-page-indicator {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+/* BOTÓN ACTUALIZAR ASISTENCIA */
+.attendance-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.attendance-submit-btn {
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 2px solid #000000;
+  background: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #b0bec5;
+  transition: all 0.15s ease;
+  color: #000000;
+}
+
+.attendance-submit-btn:hover {
+  background: #e3f2fd;
+  box-shadow: 0 6px 0 #90a4ae;
+  transform: translateY(-1px);
+}
+
+/* BLOQUE GENERAR ALERTA EN AULA */
+.alerta-aula-card {
+  margin-top: 26px;
+  border-radius: 14px;
+  border: 1px solid #000000;
+  background: #333333;           /* gris oscuro */
+  padding: 16px 18px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  color: #ffffff;                /* texto blanco */
+}
+
+.alerta-aula-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+}
+
+.alerta-aula-text {
+  flex: 0 0 220px;
+  min-width: 220px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.alerta-aula-text span {
+  display: block;
+}
+
+/* BOTONES GRANDES DE TIPO DE ALERTA */
+.alerta-aula-buttons {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+{## ESTILO BOTÓN TIPO DE ALERTA ##}
+
+
+.alert-type-btn {
+  flex: 0 0 125px;
+  height: 125px;
+  border-radius: 20px;
+  border: 2px solid #000000;
+  box-shadow: 0 9px 0 rgba(0,0,0,0.35);
+  font-size: 1.3rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  color: #0a0a0aff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+/* Colores por tipo */
+.alert-type-btn--salud {
+  background: #d32f2f;
+}
+
+.alert-type-btn--descomp {
+  background: #fb8c00;
+}
+
+.alert-type-btn--disciplina {
+  background: #fbc02d;
+  color: #000000;
+}
+
+.alert-type-btn--tecnico {
+  background: var(--accent-green);
+}
+
+/* botón activo: contraste MUY notorio con glow rojo */
+.alert-type-btn.is-active {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow:
+    0 10px 0 rgba(0,0,0,0.5),
+    0 0 0 3px #f44336,
+    0 0 16px rgba(244,67,54,0.95);
+}
+
+/* BLOQUE DESCRIPCIÓN TÉCNICA */
+.alerta-descripcion {
+  margin-top: 14px;
+}
+
+.alerta-descripcion label {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.alerta-descripcion textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #b0bec5;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  background: #ffffff;
+  color: #000000;
+}
+
+/* SUBMIT ALERTA */
+.alerta-submit-wrap {
+  margin-top: 14px;
+  text-align: right;
+}
+
+.alerta-submit-btn {
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid #ffffff;
+  background: #424242;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #000000;
+  transition: all 0.15s ease;
+  color: #ffffff;
+}
+
+.alerta-submit-btn:hover {
+  background: #555555;
+  box-shadow: 0 6px 0 #000000;
+  transform: translateY(-1px);
+}
+
+/* RESPONSIVO */
+@media (max-width: 800px) {
+  .student-name-card {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .asistencia-topbar {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+  }
+  .asistencia-title-card {
+    max-width: 100%;
+  }
+  .alerta-aula-layout {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .alerta-aula-buttons {
+    justify-content: flex-start;
+  }
+}
+</style>
+
+<div class="asistencia-page">
+
+  <!-- TOP BAR -->
+  <div class="asistencia-topbar">
+    <a href="{% url 'panel_profesor' %}" class="asistencia-back-btn">
+      Volver a mis cursos
+    </a>
+
+    <div class="asistencia-title-card">
+      <h2>Tomar Asistencia: {{ curso.nombre }}</h2>
+    </div>
+
+    <div style="width:120px"></div>
+  </div>
+
+  <!-- NOTIFICADOR -->
+  <div id="notificador-profesor"
+       class="prof-notifier"
+       data-api-url="{% url 'check_alertas_profesor' curso.id %}">
+  </div>
+
+  <!-- ACCORDION: FORMULARIO DE ASISTENCIA -->
+  <section class="attendance-accordion">
+    <button type="button"
+            id="attendance-accordion-toggle"
+            class="attendance-accordion-header">
+      <span>Lista de asistencia</span>
+      <span id="attendance-accordion-icon" class="attendance-accordion-icon">▼</span>
+    </button>
+
+    <div id="attendance-accordion-body" class="attendance-accordion-body">
+      <div class="attendance-accordion-body-inner">
+
+        <form method="POST">
+          {% csrf_token %}
+
+          {% if hora_limite %}
+            <p class="attendance-mode-banner">
+              <strong>ATENCIÓN:</strong> Este es el bloque de asistencia oficial.
+              Los botones de <strong>"Ausente"</strong> y <strong>"Atrasado"</strong> desaparecerán a la hora límite.
+            </p>
+          {% else %}
+            <p class="attendance-mode-banner attendance-mode-banner--review">
+              <strong>Modo Revisión:</strong> El bloque de cierre ha finalizado.
+              Solo puede registrar <strong>"Presente"</strong> o <strong>"Retirado"</strong>.
+            </p>
+          {% endif %}
+
+          <section class="asistencia-card">
+
+            <div class="attendance-slides">
+              {% for item in lista_alumnos %}
+                <div class="attendance-slide">
+                  <div class="attendance-row">
+                    <div class="student-name-card">
+                      {{ item.estudiante.nombre_completo }}
+                    </div>
+
+                    <div class="attendance-status-group">
+                      {# PRESENTE #}
+                      <label class="status-option">
+                        <input type="radio"
+                               name="asistencia-{{ item.estudiante.id }}"
+                               value="presente"
+                               {% if item.estado_guardado == 'presente' %}checked{% endif %}>
+                        <span class="status-circle"></span>
+                        <span class="status-text">Presente</span>
+                      </label>
+
+                      {# RETIRADO #}
+                      <label class="status-option">
+                        <input type="radio"
+                               name="asistencia-{{ item.estudiante.id }}"
+                               value="retirado"
+                               {% if item.estado_guardado == 'retirado' %}checked{% endif %}>
+                        <span class="status-circle"></span>
+                        <span class="status-text">Retirado</span>
+                      </label>
+
+                      {% if hora_limite %}
+                        {# AUSENTE #}
+                        <label class="status-option">
+                          <input type="radio"
+                                 name="asistencia-{{ item.estudiante.id }}"
+                                 value="ausente"
+                                 {% if item.estado_guardado == 'ausente' %}checked{% endif %}>
+                          <span class="status-circle"></span>
+                          <span class="status-text">Ausente</span>
+                        </label>
+
+                        {# ATRASADO #}
+                        <label class="status-option">
+                          <input type="radio"
+                                 name="asistencia-{{ item.estudiante.id }}"
+                                 value="atrasado"
+                                 {% if item.estado_guardado == 'atrasado' %}checked{% endif %}>
+                          <span class="status-circle"></span>
+                          <span class="status-text">Atrasado</span>
+                        </label>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  {% if not hora_limite and item.estado_guardado == 'ausente' %}
+                    <div class="saved-state-tag">
+                      Estado guardado: Ausente
+                    </div>
+                  {% elif not hora_limite and item.estado_guardado == 'atrasado' %}
+                    <div class="saved-state-tag">
+                      Estado guardado: Atrasado
+                    </div>
+                  {% endif %}
+
+                  {% if not forloop.last %}
+                    <hr>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="attendance-slider-controls">
+              <button type="button" class="attendance-slider-btn" id="attendance-prev">&#10094;</button>
+              <span class="attendance-page-indicator" id="attendance-page-indicator"></span>
+              <button type="button" class="attendance-slider-btn" id="attendance-next">&#10095;</button>
+            </div>
+
+          </section>
+
+          <div class="attendance-actions">
+            <button type="submit" class="attendance-submit-btn">
+              Actualizar asistencia
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- GENERAR ALERTA EN AULA -->
+  <section class="alerta-aula-card">
+    <form method="POST" action="{% url 'crear_alerta' %}" class="alerta-aula-form">
+      {% csrf_token %}
+      <input type="hidden" name="curso_id" value="{{ curso.id }}">
+
+      <select name="tipo" id="alerta-tipo-select" required style="display:none;">
+        <option value="">-- Seleccione Tipo --</option>
+        <option value="salud">Salud</option>
+        <option value="descompensacion">Descompensación</option>
+        <option value="disciplinario">Disciplinario</option>
+        <option value="tecnico">Apoyo Técnico</option>
+      </select>
+
+      <div class="alerta-aula-layout">
+        <div class="alerta-aula-text">
+          <span>Generar</span>
+          <span>Alerta en Aula</span>
+        </div>
+
+        <div class="alerta-aula-buttons">
+          <button type="button"
+                  class="alert-type-btn alert-type-btn--salud"
+                  data-value="salud">
+            Salud
+          </button>
+
+          <button type="button"
+                  class="alert-type-btn alert-type-btn--descomp"
+                  data-value="descompensacion">
+            Descomp
+          </button>
+
+          <button type="button"
+                  class="alert-type-btn alert-type-btn--disciplina"
+                  data-value="disciplinario">
+            Discip
+          </button>
+
+          <button type="button"
+                  class="alert-type-btn alert-type-btn--tecnico"
+                  data-value="tecnico">
+            Ap. Tec
+          </button>
+        </div>
+      </div>
+
+      <div id="bloque-descripcion-tecnica" class="alerta-descripcion" style="display: none;">
+        <p>
+          <label for="alerta_descripcion">Descripción (Requerido para Apoyo Técnico):</label>
+          <textarea name="descripcion"
+                    id="alerta_descripcion"
+                    rows="2"
+                    placeholder="Ej. Proyector no enciende, necesito cable HDMI..."></textarea>
+        </p>
+      </div>
+
+      <div class="alerta-submit-wrap">
+        <button type="submit" class="alerta-submit-btn">
+          Generar alerta
+        </button>
+      </div>
+    </form>
+  </section>
+
+</div>
+
+<script src="{% static 'core/js/tomar_asistencia.js' %}" defer></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  /* -------- SLIDER DE ALUMNOS (3 por página) -------- */
+  const slides = Array.from(document.querySelectorAll('.attendance-slide'));
+  const PAGE_SIZE = 3;
+  let startIndex = 0;
+
+  const prevBtn = document.getElementById('attendance-prev');
+  const nextBtn = document.getElementById('attendance-next');
+  const indicator = document.getElementById('attendance-page-indicator');
+
+  function renderSlides() {
+    const total = slides.length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const currentPage = Math.floor(startIndex / PAGE_SIZE) + 1;
+
+    slides.forEach((slide, idx) => {
+      if (idx >= startIndex && idx < startIndex + PAGE_SIZE) {
+        slide.style.display = 'block';
+      } else {
+        slide.style.display = 'none';
+      }
+    });
+
+    if (indicator) {
+      indicator.textContent = totalPages > 0 ? (currentPage + ' / ' + totalPages) : '';
+    }
+
+    if (prevBtn) prevBtn.disabled = (startIndex === 0);
+    if (nextBtn) nextBtn.disabled = (startIndex + PAGE_SIZE >= total);
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', function () {
+      if (startIndex >= PAGE_SIZE) {
+        startIndex -= PAGE_SIZE;
+        renderSlides();
+      }
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', function () {
+      if (startIndex + PAGE_SIZE < slides.length) {
+        startIndex += PAGE_SIZE;
+        renderSlides();
+      }
+    });
+  }
+
+  renderSlides();
+
+  /* -------- BOTONES DE TIPO DE ALERTA -------- */
+  const selectTipo = document.getElementById('alerta-tipo-select');
+  const descBlock = document.getElementById('bloque-descripcion-tecnica');
+  const buttons = document.querySelectorAll('.alert-type-btn');
+
+  function updateTipo(value) {
+    if (!selectTipo) return;
+    selectTipo.value = value || '';
+
+    if (descBlock) {
+      if (value === 'tecnico') {
+        descBlock.style.display = 'block';
+      } else {
+        descBlock.style.display = 'none';
+      }
+    }
+
+    buttons.forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.value === value);
+    });
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      updateTipo(this.dataset.value);
+    });
+  });
+
+  if (selectTipo && selectTipo.value) {
+    updateTipo(selectTipo.value);
+  }
+
+  /* -------- ACCORDION ASISTENCIA -------- */
+  const accToggle = document.getElementById('attendance-accordion-toggle');
+  const accBody = document.getElementById('attendance-accordion-body');
+  const accIcon = document.getElementById('attendance-accordion-icon');
+
+  if (accToggle && accBody) {
+    // Arranca cerrado (para dar protagonismo a los botones de alerta)
+    accBody.classList.remove('is-open');
+    if (accIcon) accIcon.textContent = '▼';
+
+    accToggle.addEventListener('click', function () {
+      const isOpen = accBody.classList.toggle('is-open');
+      if (accIcon) accIcon.textContent = isOpen ? '▲' : '▼';
+    });
+  }
+});
+</script>
+
+{% endblock %}

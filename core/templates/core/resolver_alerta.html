@@ -1,0 +1,431 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+/* Paleta base */
+:root {
+  --bg-dark: #424242;
+  --accent-blue: #2196F3;
+  --accent-green-soft: #e6f4ea;
+  --accent-green-border: #c5e1a5;
+  --text-muted: #666;
+}
+
+/* Contenedor general de la página */
+.resolver-page {
+  max-width: 960px;
+  margin: 0 auto 40px;
+  padding: 10px 15px 30px;
+}
+
+/* ====== CABECERA: TÍTULO + BOTÓN CANCELAR ====== */
+
+.resolver-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 10px;
+}
+
+.resolver-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.resolver-btn {
+  display: inline-block;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid #b0bec5;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.resolver-btn--secondary {
+  background: #4CAF50;
+  color: #fff;
+  border-color: #388E3C;
+}
+
+.resolver-btn--secondary:hover {
+  background: #388E3C;
+}
+
+/* ====== RESUMEN DE LA ALERTA ====== */
+
+.alert-summary {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--accent-green-border);
+  background: #ffffff;
+  margin-bottom: 25px;
+  color: #000000; /* <-- todo el texto del cuadro en negro */
+}
+
+.alert-summary__header {
+  background: var(--accent-green-soft);
+  text-align: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+
+.alert-summary__body {
+  padding: 14px 18px 16px;
+}
+
+.alert-summary__body p {
+  margin: 0.15rem 0;
+  font-size: 0.95rem;
+}
+
+.summary-label {
+  font-weight: 800;
+}
+
+.summary-value {
+  font-weight: 400;
+}
+
+/* ====== FORMULARIO ====== */
+
+.resolver-form {
+  margin-top: 10px;
+}
+
+/* Texto de sección */
+.section-caption {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* ====== SELECCIÓN DE ESTUDIANTE ====== */
+
+.student-section {
+  border-top: 1px solid #ccc;
+  padding-top: 15px;
+  margin-top: 10px;
+  margin-bottom: 25px;
+  font-size: 0.95rem;
+}
+
+.student-instruction {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.student-select-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  margin-bottom: 8px;
+}
+
+.student-label {
+  background: #eceff1;
+  border: 1px solid #b0bec5;
+  border-right: none;
+  padding: 6px 14px;
+  border-radius: 20px 0 0 20px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.student-label label {
+  margin: 0;
+  cursor: pointer;
+  color: #000000;   /* <- ahora en negro */
+  font-weight: 700; /* opcional, para mantenerlo bien marcado */
+}
+
+
+.student-select-wrapper {
+  flex: 1;
+  min-width: 200px;
+}
+
+.student-select-wrapper select {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 0 20px 20px 0;
+  border: 1px solid #b0bec5;
+  border-left: none;
+  font-size: 0.9rem;
+  background-color: #ffffff;
+}
+
+/* Caja donde se mostrará la info del apoderado (JS) */
+.student-apoderado {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px dashed #b0bec5;
+  background: #f5f5f5;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+/* Errores */
+.field-errors {
+  color: #d32f2f;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+/* ====== SUBTIPO DE DESCOMPENSACIÓN ====== */
+
+.subtipo-section {
+  margin-bottom: 25px;
+}
+
+.subtipo-card {
+  background: #37474f;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.subtipo-card p {
+  margin: 0;
+}
+
+.subtipo-card label {
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.subtipo-card select {
+  margin-top: 6px;
+  width: 100%;
+  max-width: 320px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #90a4ae;
+  background: #455a64;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+/* ====== DESCRIPCIÓN DEL SUCESO ====== */
+
+.desc-section {
+  margin-bottom: 25px;
+}
+
+.desc-label {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.desc-card {
+  border-radius: 10px;
+  border: 1px solid #b0bec5;
+  background: #ffffff;
+  padding: 6px 10px;
+}
+
+.desc-card textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  padding: 8px 4px;
+  color: #333;
+}
+
+.desc-card textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* ====== BOTÓN TERMINAR Y GUARDAR ====== */
+
+.resolver-actions {
+  margin-top: 10px;
+  text-align: left;
+}
+
+.resolver-btn--primary {
+  display: inline-block;
+  padding: 12px 26px;
+  border-radius: 999px;
+  border: 1px solid #1976d2;
+  background: var(--accent-blue);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.resolver-btn--primary:hover {
+  background: #1976d2;
+}
+
+/* Responsivo */
+@media (max-width: 640px) {
+  .resolver-header {
+    flex-direction: column;
+  }
+  
+  .resolver-title {
+    order: -1;
+  }
+
+  .student-label {
+    border-radius: 20px 20px 0 0;
+    border-right: 1px solid #b0bec5;
+  }
+
+  .student-select-wrapper select {
+    border-radius: 0 0 20px 20px;
+    border-top: none;
+  }
+}
+</style>
+
+<div class="resolver-page">
+
+  <!-- CABECERA -->
+  <div class="resolver-header">
+    <div style="width:120px"></div> {# espacio para compensar el botón en desktop #}
+    <h2 class="resolver-title">Resolver Alerta y Registrar Bitácora</h2>
+    <a href="{% url 'panel_gestion' %}" class="resolver-btn resolver-btn--secondary">
+      Cancelar y volver
+    </a>
+  </div>
+
+  <!-- RESUMEN DE LA ALERTA -->
+  <section class="alert-summary">
+    <div class="alert-summary__header">
+      RESUMEN DE LA ALERTA
+    </div>
+    <div class="alert-summary__body">
+      <p><span class="summary-label">TIPO:</span> <span class="summary-value">{{ alerta.get_tipo_display }}</span></p>
+      <p><span class="summary-label">CURSO:</span> <span class="summary-value">{{ alerta.curso.nombre }}</span></p>
+      <p><span class="summary-label">REPORTÓ:</span> <span class="summary-value">{{ alerta.creada_por.username|default:"Sistema" }}</span></p>
+      <p><span class="summary-label">FECHA/HORA:</span> <span class="summary-value">{{ alerta.tiempo_creacion }}</span></p>
+      <p><span class="summary-label">ENCARGADO:</span> <span class="summary-value">{{ alerta.atendida_por.username }}</span></p>
+    </div>
+  </section>
+
+  {# Datos de apoderados ocultos para JS (igual que tu versión original) #}
+  {% if not form.estudiante.is_hidden %}
+    <div id="datos-apoderados-ocultos" style="display:none;">
+      {% for est in estudiantes_del_curso %}
+        <div id="info-apoderado-{{ est.id }}">
+          <p><strong>Apoderado:</strong> {{ est.nombre_apoderado|default:"No informado" }}</p>
+          <p><strong>Teléfono:</strong> {{ est.telefono_apoderado|default:"No informado" }}</p>
+          <p><strong>Email:</strong> {{ est.email_apoderado|default:"No informado" }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="POST" class="resolver-form">
+    {% csrf_token %}
+
+    {# ALERTA DE ASISTENCIA: SOLO MUESTRA INFO #}
+    {% if alerta.tipo == 'asistencia' %}
+      <section class="student-section">
+        <h3 class="section-caption">Información del estudiante</h3>
+        <div class="student-apoderado">
+          {% with est=alerta.estudiante_implicado %}
+            {% if est %}
+              <p><strong>Estudiante:</strong> {{ est.nombre_completo }}</p>
+              <hr>
+              <p><strong>Apoderado:</strong> {{ est.nombre_apoderado|default:"No informado" }}</p>
+              <p><strong>Teléfono:</strong> {{ est.telefono_apoderado|default:"No informado" }}</p>
+              <p><strong>Email:</strong> {{ est.email_apoderado|default:"No informado" }}</p>
+            {% else %}
+              <p>Error: No se encontró estudiante asociado a esta alerta de asistencia.</p>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </section>
+
+    {# OTROS TIPOS: SELECCIONAR ESTUDIANTE #}
+    {% elif not form.estudiante.is_hidden %}
+      <section class="student-section">
+        <p class="student-instruction">
+          Por favor, seleccione un estudiante para ver la información del apoderado.
+        </p>
+
+        <div class="student-select-row">
+          <div class="student-label">
+            {{ form.estudiante.label_tag }}
+          </div>
+          <div class="student-select-wrapper">
+            {{ form.estudiante }}
+          </div>
+        </div>
+
+        {% if form.estudiante.errors %}
+          <div class="field-errors">{{ form.estudiante.errors }}</div>
+        {% endif %}
+
+        <div id="info-apoderado-visible" class="student-apoderado">
+          <p>Selecciona un estudiante.</p>
+        </div>
+      </section>
+    {% endif %}
+
+    {# SUBTIPO DE DESCOMPENSACIÓN (SI APLICA) #}
+    {% if not form.subtipo_descompensacion.is_hidden %}
+      <section class="subtipo-section">
+        <div class="subtipo-card">
+          <p>
+            {{ form.subtipo_descompensacion.label_tag }}
+          </p>
+          {{ form.subtipo_descompensacion }}
+          {% if form.subtipo_descompensacion.errors %}
+            <div class="field-errors">{{ form.subtipo_descompensacion.errors }}</div>
+          {% endif %}
+        </div>
+      </section>
+    {% endif %}
+
+    {# DESCRIPCIÓN DEL SUCESO #}
+    <section class="desc-section">
+      <p class="desc-label">Descripción de lo sucedido:</p>
+      <div class="desc-card">
+        {{ form.descripcion_suceso }}
+      </div>
+      {% if form.descripcion_suceso.errors %}
+        <div class="field-errors">{{ form.descripcion_suceso.errors }}</div>
+      {% endif %}
+    </section>
+
+    {# BOTÓN FINAL #}
+    <div class="resolver-actions">
+      <button type="submit" class="resolver-btn resolver-btn--primary">
+        Terminar y Guardar
+      </button>
+    </div>
+
+  </form>
+
+</div>
+
+<script src="{% static 'core/js/resolver_alerta.js' %}" defer></script>
+
+{% endblock %}
