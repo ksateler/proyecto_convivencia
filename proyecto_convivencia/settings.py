@@ -145,3 +145,23 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS') # Clave que da gmail
 # # El email que se ve como De:
 # DEFAULT_FROM_EMAIL = 'Sistema de Alertas <alertas.escuela.vsm@gmail.com>'
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Para producción (cuando esté en Render)
+DEBUG = False
+
+# Por simplicidad:
+ALLOWED_HOSTS = ["*"]  
+# Más seguro luego: ["nombre-de-tu-servicio.onrender.com"]
+
+# Static files
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+# Whitenoise para servir estáticos
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # <-- agrega esto
+    # ...
+]
