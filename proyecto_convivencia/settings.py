@@ -152,7 +152,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = False
 
 # Por simplicidad:
-ALLOWED_HOSTS = ["*"]  
+ALLOWED_HOSTS = ["proyecto_convivencia.onrender.com"]  
 # Más seguro luego: ["nombre-de-tu-servicio.onrender.com"]
 
 # Static files
