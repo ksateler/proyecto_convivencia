@@ -1,7 +1,10 @@
 asgiref==3.11.0
+diff-match-patch==20241021
 Django==5.2.9
+django-import-export==4.3.14
 gunicorn==23.0.0
 packaging==25.0
 sqlparse==0.5.4
+tablib==3.9.0
 tzdata==2025.2
 whitenoise==6.11.0
