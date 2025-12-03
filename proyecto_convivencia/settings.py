@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'import_export', # Librería de django que permite descargar informes de Excel
+     # Librería de django que permite descargar informes de Excel
 ]
 
 MIDDLEWARE = [
