@@ -26,9 +26,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # tus apps
     "import_export",
-    "core",  # o como se llame tu app
+    # tus apps...
+    "core",  # o el nombre que uses
 ]
 
 MIDDLEWARE = [
